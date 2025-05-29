@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leer Excel con JavaScript</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            box-sizing: border-box;
+        }
+
+        h1 {
+            margin-bottom: 10px;
+            font-size: 1.8em;
+        }
+
+        .excel-section {
+            margin-bottom: 40px;
+        }
+
+        .excel-section input,
+        .excel-section button {
+            margin-right: 10px;
+            margin-bottom: 10px;
+            padding: 8px;
+            font-size: 1em;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background-color: #fff;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+            font-size: 0.9em;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+
+        #json-container-1, #json-container-2 {
+            display: none;
+            margin-top: 20px;
+        }
+
+        /* Contenedor para las tablas de duplicados y no duplicados */
+        .tables-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            width: 100%;
+            margin-top: 40px;
+            gap: 20px;
+        }
+
+        /* Estilo para los contenedores de tablas */
+        #tabla-duplicados, #tabla-no-duplicados {
+            width: 48%;
+            min-width: 300px;
+            overflow-x: auto;
+        }
+
+        /* Contenedor para tablas-archivos */
+        #tablas-archivos {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        #tablas-archivos > div {
+            flex: 1;
+            min-width: 300px;
+        }
+
+        /* Para el botón de comparación centrado */
+        #btn-comparar {
+            margin-top: 30px;
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 1em;
+            border-radius: 5px;
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        #btn-comparar:hover {
+            background-color: #45a049;
+        }
+
+        /* Botón para minimizar la tabla de comparación */
+        #btn-minimizar-comparacion {
+            margin-top: 20px;
+            padding: 10px 20px;
+            background-color: #f44336;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 1em;
+            border-radius: 5px;
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        #btn-minimizar-comparacion:hover {
+            background-color: #d32f2f;
+        }
+
+        /* Estilo para los botones de reemplazo */
+        .replace-button {
+            padding: 5px 10px;
+            background-color: #2196F3;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 3px;
+            font-size: 0.9em;
+        }
+
+        .replace-button:hover {
+            background-color: #1976D2;
+        }
+
+        /* Estilo para el botón Suma Inicial */
+        #btn-suma-inicial {
+            margin-top: 20px;
+            margin-bottom: 20px;
+            padding: 10px 20px;
+            background-color: #e9a11c;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 1em;
+            border-radius: 5px;
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        #btn-suma-inicial:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        #btn-suma-inicial:hover:not(:disabled) {
+            background-color: #e68900;
+        }
+
+        /* Estilo para el botón Suma + Nuevos Valores */
+        #btn-suma-nuevos-valores {
+            margin-top: 20px;
+            padding: 10px 20px;
+            background-color: #ff5722;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 1em;
+            border-radius: 5px;
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        #btn-suma-nuevos-valores:hover {
+            background-color: #e64a19;
+        }
+
+        /* Estilo para la tabla de Suma Inicial */
+        #tabla-suma-inicial {
+            display: none;
+            width: 100%;
+            max-width: 600px;
+            margin: 20px 0;
+            margin-left: 0; /* Alineado a la izquierda */
+            overflow-x: auto;
+        }
+
+        #tabla-suma-inicial h2 {
+            font-size: 1.2em;
+            text-align: left;
+            margin-bottom: 10px;
+        }
+
+        #tabla-suma-inicial table {
+            background-color: #fff7e6;
+            font-size: 0.85em;
+        }
+
+        #tabla-suma-inicial th, #tabla-suma-inicial td {
+            padding: 6px;
+        }
+
+        /* Estilo para la tabla de Suma + Nuevos Valores */
+        .tabla-suma-nuevos-valores {
+            width: 100%;
+            max-width: 600px;
+            margin: 20px 0;
+            margin-left: 0; /* Alineado a la izquierda */
+            overflow-x: auto;
+        }
+
+        .tabla-suma-nuevos-valores h2 {
+            font-size: 1.2em;
+            text-align: left;
+            margin-bottom: 10px;
+        }
+
+        .tabla-suma-nuevos-valores table {
+            background-color: #fff7e6;
+            font-size: 0.85em;
+        }
+
+        .tabla-suma-nuevos-valores th, .tabla-suma-nuevos-valores td {
+            padding: 6px;
+        }
+
+        /* Asegurar que el contenido no se superponga */
+        .content-container {
+            overflow: hidden;
+        }
+
+        /* Media Queries para pantallas pequeñas */
+        @media (max-width: 768px) {
+            .tables-container {
+                flex-direction: column;
+                align-items: flex-start; /* Alineado a la izquierda */
+            }
+
+            #tabla-duplicados, #tabla-no-duplicados, #tabla-suma-inicial {
+                width: 100%;
+                max-width: 100%;
+                margin: 20px 0;
+                margin-left: 0;
+            }
+
+            .tabla-suma-nuevos-valores {
+                width: 100%;
+                max-width: 100%;
+                margin: 20px 0;
+                margin-left: 0;
+            }
+
+            #tablas-archivos {
+                flex-direction: column;
+            }
+
+            #tablas-archivos > div {
+                width: 100%;
+                min-width: unset;
+            }
+
+            h1 {
+                font-size: 1.5em;
+            }
+
+            th, td {
+                padding: 6px;
+                font-size: 0.85em;
+            }
+
+            .excel-section input,
+            .excel-section button {
+                width: 100%;
+                box-sizing: border-box;
+                margin-right: 0;
+            }
+        }
+
+        @media (max-width: 480px) {
+            body {
+                margin: 10px;
+            }
+
+            h1 {
+                font-size: 1.2em;
+            }
+
+            th, td {
+                padding: 4px;
+                font-size: 0.8em;
+            }
+
+            .replace-button {
+                padding: 4px 8px;
+                font-size: 0.8em;
+            }
+
+            #btn-comparar, #btn-minimizar-comparacion, #btn-suma-inicial, #btn-suma-nuevos-valores {
+                padding: 8px 16px;
+                font-size: 0.9em;
+            }
+
+            #tabla-suma-inicial, .tabla-suma-nuevos-valores {
+                max-width: 100%;
+            }
+        }
+        
+    </style>
+    <!--para lectura y exportacion en pdf-->
+     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.3/jspdf.plugin.autotable.min.js"></script>
+</head>
+<body>
+    <div class="excel-section">
+        <h1>Subir archivo Excel 1</h1>
+        <input type="file" id="input-excel-1" />
+        <button id="btn-mostrar-datos-1" disabled>Mostrar Datos 1</button>
+        <button id="btn-minimizar-datos-1" disabled>Minimizar Datos 1</button>
+        <div id="json-container-1"></div>
+    </div>
+
+    <div class="excel-section">
+        <h1>Subir archivo Excel 2</h1>
+        <input type="file" id="input-excel-2" />
+        <button id="btn-mostrar-datos-2" disabled>Mostrar Datos 2</button>
+        <button id="btn-minimizar-datos-2" disabled>Minimizar Datos 2</button>
+        <div id="json-container-2"></div>
+    </div>
+
+    <!-- Botón Comparar y Mostrar (Centrado) -->
+    <button id="btn-comparar">Comparar y Validar</button>
+    <div id="tablas-archivos"></div>
+    <!-- Contenedor de tablas en paralelo -->
+    <div class="tables-container">
+        <div id="tabla-duplicados"></div>
+        <div id="tabla-no-duplicados"></div>
+    </div>
+
+    <!-- Botón Minimizar Comparación -->
+    <button id="btn-minimizar-comparacion">Minimizar Comparación</button>
+
+    <!-- Contenedor para el botón Suma Inicial y la tabla -->
+    <div class="content-container">
+        <!-- Botón Suma Inicial -->
+        <button id="btn-suma-inicial" disabled>Suma Inicial</button>
+        <!-- Contenedor para la tabla de Suma Inicial -->
+        <div id="tabla-suma-inicial"></div>
+    </div>
+    
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.1/xlsx.full.min.js"></script>
+    <script src="script.js"></script>
+    <script src="script2.js"></script>
+    <script src="script3.js"></script>
+    <script src="script4.js"></script>
+</body>
+</html>
